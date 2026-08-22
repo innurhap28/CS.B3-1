@@ -7,83 +7,61 @@ class Node:
         self.prev = None
         self.next = None
 
-# insert_front()는 new_node, head, 그리고 기존 head의 포인터 몇 개만 변경하기 때문에 데이터 개수에 관계없이 항상 일정한 횟수의 연산이 수행된다. 따라서 시간 복잡도는 O(1)이다.
 class DoublyLinkedList:
     def __init__(self):
-        self.head = None
-        self.tail = None
+        # Sentinel Node 사용
+        self.head = Node(None)
+        self.tail = Node(None)
+        self.head.next = self.tail
+        self.tail.prev = self.head
         self.size = 0
 
+    # 포인터 연결 전용 헬퍼 함수
+    @staticmethod
+    def _link(prev_node, new_node, next_node):
+        new_node.prev = prev_node
+        new_node.next = next_node
+        prev_node.next = new_node
+        next_node.prev = new_node
+
+    @staticmethod
+    def _unlink(node):
+        node.prev.next = node.next
+        node.next.prev = node.prev
+
+    # new_node와 양쪽 노드의 포인터만 변경하기 때문에 데이터 개수에 관계없이 항상 일정한 횟수의 연산이 수행 -> 시간 복잡도는 O(1).
     def insert_front(self, data):
         new_node = Node(data)
-
-        if self.head is None:
-            self.head = new_node
-            self.tail = new_node
-        else:
-            new_node.next = self.head
-            self.head.prev = new_node
-            self.head = new_node
+        self._link(self.head, new_node, self.head.next)
         self.size += 1
 
     def insert_back(self, data):
         new_node = Node(data)
-
-        if self.tail is None:
-            self.head = new_node
-            self.tail = new_node
-        else:
-            new_node.prev = self.tail
-            self.tail.next = new_node
-            self.tail = new_node
+        self._link(self.tail.prev, new_node, self.tail)
         self.size += 1
 
-    def remove_front(self):
-        if self.head is None:
-            return
-
-        self.head = self.head.next
-        
-        if self.head is None:
-            self.tail = None
-        else:
-            self.head.prev = None
+    def remove_node(self, node):
+        if node is self.head or node is self.tail or self.size == 0:
+            return None
+        self._unlink(node)
+        data = node.data
+        node.prev = None
+        node.next = None
         self.size -= 1
+        return data
+    
+    def remove_front(self):
+        if self.size == 0:
+            return None
+        return self.remove_node(self.head.next)
 
     def remove_back(self):
-        if self.tail is None:
-            return
-
-        self.tail = self.tail.prev
-
-        if self.tail is None:
-            self.head = None
-        else:
-            self.tail.next = None
-        self.size -= 1
-
-    def remove_node(self, node):
-        if node is self.head:
-            self.remove_front()
-        elif node is self.tail:
-            self.remove_back()
-        else:
-            node.prev.next = node.next
-            node.next.prev = node.prev
-            self.size -=1
-
+        if self.size == 0:
+            return None
+        return self.remove_node(self.tail.prev)
+    
     def move_to_front(self, node):
-        if node is self.head:
+        if self.size == 0 or node.prev is self.head or node is self.head or node is self.tail:
             return
-
-        if node is self.tail:
-            self.tail = node.prev
-            node.prev.next = None
-        else:
-            node.prev.next = node.next
-            node.next.prev = node.prev
-
-        node.next = self.head
-        node.prev = None
-        self.head.prev = node
-        self.head = node
+        self._unlink(node)
+        self._link(self.head, node, self.head.next)
