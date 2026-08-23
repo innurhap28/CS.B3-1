@@ -14,7 +14,7 @@ class DoublyLinkedList:
         self.tail = Node(None)
         self.head.next = self.tail
         self.tail.prev = self.head
-        self.size = 0
+        self._size = 0
 
     # 포인터 연결 전용 헬퍼 함수
     @staticmethod
@@ -33,35 +33,35 @@ class DoublyLinkedList:
     def insert_front(self, data):
         new_node = Node(data)
         self._link(self.head, new_node, self.head.next)
-        self.size += 1
+        self._size += 1
 
     def insert_back(self, data):
         new_node = Node(data)
         self._link(self.tail.prev, new_node, self.tail)
-        self.size += 1
+        self._size += 1
 
     def remove_node(self, node):
-        if node is self.head or node is self.tail or self.size == 0:
+        if node is self.head or node is self.tail or self._size == 0:
             return None
         self._unlink(node)
         data = node.data
         node.prev = None
         node.next = None
-        self.size -= 1
+        self._size -= 1
         return data
     
     def remove_front(self):
-        if self.size == 0:
+        if self._size == 0:
             return None
         return self.remove_node(self.head.next)
 
     def remove_back(self):
-        if self.size == 0:
+        if self._size == 0:
             return None
         return self.remove_node(self.tail.prev)
     
     def move_to_front(self, node):
-        if self.size == 0 or node.prev is self.head or node is self.head or node is self.tail:
+        if self._size == 0 or node.prev is self.head or node is self.head or node is self.tail:
             return
         self._unlink(node)
         self._link(self.head, node, self.head.next)
