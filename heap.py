@@ -43,9 +43,9 @@ class Heap:
         while True:
             left_child = index * 2 + 1
             right_child = index * 2 + 2
-            smallest = index    # index가 가장 작은 값이라고 가정
+            smallest = index    # 현재 노드가 가장 작다고 가정
             if left_child < length and self.heap[left_child] < self.heap[smallest]: 
-                # 왼쪽 자식이 존재하고, index보다 작다면 smallest 교체
+                # 왼쪽 자식이 존재하고, 현재 노드보다 작다면 smallest를 왼쪽 자식으로 변경
                 smallest = left_child
             if right_child < length and self.heap[right_child] < self.heap[smallest]:
                 smallest = right_child

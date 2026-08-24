@@ -25,7 +25,7 @@ class HashMap:
             current = current.next
         return bucket, None
 
-    # 같은 key라도 버킷 위치가 달라질 수 있으므로 새 버킷에 넣음
+    # capacity가 변경되면 버킷 위치가 달라질 수 있으므로 새 버킷에 다시 해싱
     def _resize(self):
         old_buckets = self.buckets
         self.capacity *= 2
@@ -47,7 +47,7 @@ class HashMap:
             self._resize()
 
     def get(self, key):
-        bucket, node = self._find_node(key)
+        _, node = self._find_node(key)
         if node is not None:
             key, value = node.data
             return value
@@ -63,7 +63,7 @@ class HashMap:
         return None
 
     def contains(self, key):
-        bucket, node = self._find_node(key)
+        _, node = self._find_node(key)
         return node is not None
 
     def keys(self):
