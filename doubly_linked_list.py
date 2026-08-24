@@ -65,3 +65,17 @@ class DoublyLinkedList:
             return
         self._unlink(node)
         self._link(self.head, node, self.head.next)
+
+    # `for item in 리스트:` 문법을 사용할 수 있게 해줌
+    # 리스트 내부의 전체 Key나 Value를 순회할 때 코드가 매우 간결해짐
+    def __iter__(self):
+        curr = self.head.next
+        while curr is not self.tail:
+            yield curr.data
+            curr = curr.next
+
+    # `print(리스트)` 했을 때 예쁘고 알기 쉽게 출력해줌
+    # LRU 캐시의 데이터가 순서대로 잘 이동하고 있는지 눈으로 바로 확인 가능
+    def __repr__(self):
+        nodes = [str(data) for data in self]
+        return " -> ".join(nodes) if nodes else "Empty List"
