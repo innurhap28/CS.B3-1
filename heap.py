@@ -1,6 +1,6 @@
 # 최소 힙 (TTL 관리)
 
-class Heap:
+class MinHeap:
     def __init__(self):
         self.heap = []
 
