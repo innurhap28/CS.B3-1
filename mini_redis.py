@@ -20,13 +20,14 @@ class MiniRedis:
             _, value = node.data
             self.data.remove(key)
             self.lru.remove_node(node)
-
-            key_bytes = len(str(key).encode("utf-8"))
-            val_bytes = len(str(value).encode("utf-8"))
-            self.used_memory -= (key_bytes + val_bytes)
+            self.used_memory -= self._calculate_memory(key,value)
+            return True
+        return False
 
     def _calculate_memory(self, key, value):
-        pass
+        key_bytes = len(str(key).encode("utf-8"))
+        val_bytes = len(str(value).encode("utf-8"))
+        return key_bytes + val_bytes
 
     def _evict_if_needed(self):
         """
@@ -47,31 +48,35 @@ class MiniRedis:
         만료 시간이 지난 키들을 힙에서 꺼내어 삭제
         """
         current_time = time.time()
-        while self.ttl:
+        while self.ttl.size() > 0:
             expired_at, key = self.ttl.peek()
             if expired_at <= current_time:
                 self.ttl.pop()
-                self._delete_key(key)
+                if self.data.contains(key):
+                    self._delete_key(key)
             else:
                 break
 
     def set(self, key, value, ttl_seconds=None):
+
+        entry_memory = self._calculate_memory(key, value)
+        if self.maxmemory > 0 and entry_memory > self.maxmemory:
+            return "(error) OOM command not allowed when used_memory > maxmemory"
+
         if self.data.contains(key):
             self._delete_key(key)
 
         new_node = Node((key, value))
         self.data.put(key, new_node)
         self.lru.insert_front(new_node)
-
-        key_bytes = len(str(key).encode("utf-8"))
-        val_bytes = len(str(value).encode("utf-8"))
-        self.used_memory += (key_bytes + val_bytes)
+        self.used_memory += entry_memory
 
         if ttl_seconds is not None:
             expire_at = time.time() + ttl_seconds
             self.ttl.push((expire_at, key))
 
         self._evict_if_needed()
+        return "OK"
 
     def get(self, key):
         self._clean_expired()
@@ -83,22 +88,66 @@ class MiniRedis:
         return None
 
     def delete(self, key):
-        pass
+        self._clean_expired()
+        if key is None:
+            return "(integer) 0"
+
+        is_deleted = self._delete_key(key)
+
+        if is_deleted:
+            return "(integer) 1"
+        else:
+            return "(integer) 0"
+
 
     def exists(self, key):
-        pass
+        self._clean_expired()
+        if self.data.contains(key):
+            return "(integer) 1"
+        return "(integer) 0"
 
     def dbsize(self):
-        pass
+        self._clean_expired()
+        return self.data.size()
 
     def keys(self):
-        pass
+        self._clean_expired()
+        return self.data.keys()
 
     def expire(self, key, seconds):
-        pass
+        self._clean_expired()
+        if not self.data.contains(key):
+            return "(integer) 0"
+
+        try:
+            sec = float(seconds)
+            if sec <= 0:
+                self._delete_key(key)
+                return "(integer) 1"
+            expire_at = time.time() + sec
+            self.ttl.push((expire_at, key))
+            return "(integer) 1"
+        except (ValueError, TypeError):
+            return "(error) ERR value is not an integer or out of range"
 
     def ttl(self, key):
-        pass
+        self._clean_expired()
+        if not self.data.contains(key):
+            return "(integer) -2"
 
-    def config_set(self, _):
-        pass
+        for expire_at, k in self.ttl.heap:
+            if k == key:
+                remaining_sec = int(expire_at - time.time())
+                return f"(integer) {max(0, remaining_sec)}"
+        return "(integer) -1"
+
+    def config_set(self, bytes):
+        try:
+            maxmemory = int(bytes)
+            if maxmemory >= 0:
+                self.maxmemory = maxmemory
+                self._evict_if_needed()
+                return "OK"
+        except (ValueError, TypeError):
+            pass
+        return "(error) ERR value is not an integer or out of range"
