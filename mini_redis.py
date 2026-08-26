@@ -99,7 +99,6 @@ class MiniRedis:
         else:
             return "(integer) 0"
 
-
     def exists(self, key):
         self._clean_expired()
         if self.data.contains(key):
@@ -114,6 +113,7 @@ class MiniRedis:
         self._clean_expired()
         return self.data.keys()
 
+# 수정 필요 (ttl 구조 개선)
     def expire(self, key, seconds):
         self._clean_expired()
         if not self.data.contains(key):
@@ -130,6 +130,7 @@ class MiniRedis:
         except (ValueError, TypeError):
             return "(error) ERR value is not an integer or out of range"
 
+# 수정 필요 (ttl 구조 개선)
     def ttl(self, key):
         self._clean_expired()
         if not self.data.contains(key):
@@ -151,3 +152,10 @@ class MiniRedis:
         except (ValueError, TypeError):
             pass
         return "(error) ERR value is not an integer or out of range"
+
+    def info_memory(self):
+        return (
+            f"used_memory:{self.used_memory}\n"
+            f"maxmemory:{self.maxmemory}\n"
+            f"evicted_keys:{self.evicted_keys}"
+        )
