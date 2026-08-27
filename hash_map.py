@@ -31,10 +31,14 @@ class HashMap:
         self.capacity *= 2
         self.buckets = [DoublyLinkedList() for _ in range(self.capacity)]
         for bucket in old_buckets:
-            for key, value in bucket:
+            current = bucket.head.next
+            while current is not bucket.tail:
+                next_node = current.next
+                key, _ = current.data
                 index = self._hash(key)
-                self.buckets[index].insert_front((key, value))
-
+                self.buckets[index].insert_node_front(current)
+                current = next_node
+                
     def put(self, key, value):
         bucket, node = self._find_node(key)
         if node is not None:

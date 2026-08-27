@@ -36,6 +36,11 @@ class DoublyLinkedList:
         self._size += 1
         return new_node
 
+    # 기존 Node를 다른 리스트로 옮길 때 사용
+    def insert_node_front(self, node):
+        self._link(self.head, node, self.head.next)
+        self._size += 1
+
     def insert_back(self, data):
         new_node = Node(data)
         self._link(self.tail.prev, new_node, self.tail)
