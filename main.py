@@ -1,10 +1,9 @@
 # 프로그램 진입점
 
-from CLI import CLI
+from CLI import run_cli
 
 def main():
-    cli = CLI()
-    cli.run()
+    run_cli()
 
 if __name__ == "__main__":
     main()

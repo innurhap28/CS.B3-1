@@ -53,3 +53,12 @@ class MinHeap:
                 break
             self.heap[index], self.heap[smallest] = self.heap[smallest], self.heap[index]
             index = smallest
+
+    def find_expire_at(self, key):
+        """
+        힙 내부 리스트를 순회하여 해당 key의 만료 시간(expire_at)을 반환
+        """
+        for expire_at, k in self.heap:
+            if k == key:
+                return expire_at
+        return None

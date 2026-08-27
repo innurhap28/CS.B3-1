@@ -8,7 +8,7 @@ class MiniRedis:
     def __init__(self):
         self.data = HashMap()           # 실제 key-value 저장
         self.lru = DoublyLinkedList()   # LRU 순서 관리
-        self.ttl = MinHeap()            # 만료 시간 관리
+        self.ttl_heap = MinHeap()            # 만료 시간 관리
 
         self.maxmemory = 0
         self.used_memory = 0
@@ -36,7 +36,7 @@ class MiniRedis:
         if self.maxmemory <= 0:
             return
 
-        while self.used_memory > self.maxmemory and self.lru._size > 0:
+        while self.used_memory > self.maxmemory and len(self.lru) > 0:
             oldest_node = self.lru.tail.prev
             if oldest_node is not self.lru.head:
                 evicted_key, _ = oldest_node.data
@@ -48,10 +48,10 @@ class MiniRedis:
         만료 시간이 지난 키들을 힙에서 꺼내어 삭제
         """
         current_time = time.time()
-        while self.ttl.size() > 0:
-            expired_at, key = self.ttl.peek()
+        while self.ttl_heap.size() > 0:
+            expired_at, key = self.ttl_heap.peek()
             if expired_at <= current_time:
-                self.ttl.pop()
+                self.ttl_heap.pop()
                 if self.data.contains(key):
                     self._delete_key(key)
             else:
@@ -72,8 +72,8 @@ class MiniRedis:
         self.used_memory += entry_memory
 
         if ttl_seconds is not None:
-            expire_at = time.time() + ttl_seconds
-            self.ttl.push((expire_at, key))
+            expire_at = time.time() + float(ttl_seconds)
+            self.ttl_heap.push((expire_at, key))
 
         self._evict_if_needed()
         return "OK"
@@ -93,7 +93,6 @@ class MiniRedis:
             return "(integer) 0"
 
         is_deleted = self._delete_key(key)
-
         if is_deleted:
             return "(integer) 1"
         else:
@@ -113,7 +112,6 @@ class MiniRedis:
         self._clean_expired()
         return self.data.keys()
 
-# 수정 필요 (ttl 구조 개선)
     def expire(self, key, seconds):
         self._clean_expired()
         if not self.data.contains(key):
@@ -125,21 +123,20 @@ class MiniRedis:
                 self._delete_key(key)
                 return "(integer) 1"
             expire_at = time.time() + sec
-            self.ttl.push((expire_at, key))
+            self.ttl_heap.push((expire_at, key))
             return "(integer) 1"
         except (ValueError, TypeError):
             return "(error) ERR value is not an integer or out of range"
 
-# 수정 필요 (ttl 구조 개선)
     def ttl(self, key):
         self._clean_expired()
         if not self.data.contains(key):
             return "(integer) -2"
 
-        for expire_at, k in self.ttl.heap:
-            if k == key:
-                remaining_sec = int(expire_at - time.time())
-                return f"(integer) {max(0, remaining_sec)}"
+        expire_at = self.ttl_heap.find_expire_at(key)
+        if expire_at is not None:
+            remaining_sec = int(expire_at - time.time())
+            return f"(integer) {max(0, remaining_sec)}"
         return "(integer) -1"
 
     def config_set(self, bytes):
