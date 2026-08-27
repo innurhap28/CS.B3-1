@@ -17,28 +17,84 @@ def run_cli():
         cmd = parts[0].upper()
         args = parts[1:]
 
-        print("cmd:", cmd)
-        print("args:", args)
-
+        # --- SET key value [ttl_seconds] ---
         if cmd == "SET":
-            pass
+            if len(args) < 2 or len(args) > 3:
+                print("(error) ERR wrong number of arguments for 'set' command")
+                continue
+            elif len(args) == 2:
+                print(redis.set(args[0], args[1]))
+            else:
+                print(redis.set(args[0], args[1], ttl_seconds=args[2]))
+
+        # --- GET key ---
         elif cmd == "GET":
-            pass
+            if len(args) != 1:
+                print("(error) ERR wrong number of arguments for 'get' command")
+            else:
+                result = redis.get(args[0])
+                print(f'"{result}"' if result is not None else "(nil)")
+
+        # --- DEL key ---
         elif cmd == "DEL":
-            pass
+            if len(args) != 1:
+                print("(error) ERR wrong number of arguments for 'del' command")
+            else:
+                print(redis.delete(args[0]))
+
+        # --- EXISTS key ---
         elif cmd == "EXISTS":
-            pass
+            if len(args) != 1:
+                print("(error) ERR wrong number of arguments for 'exists' command")
+            else:
+                print(redis.exists(args[0]))
+
+        # --- DBSIZE ---
         elif cmd == "DBSIZE":
-            pass
+            if len(args) != 0:
+                print("(error) ERR wrong number of arguments for 'dbsize' command")
+            else:
+                print(f"(integer) {redis.dbsize()}")
+
+        # --- KEYS ---
         elif cmd == "KEYS":
-            pass
+            if len(args) != 0:
+                print("(error) ERR wrong number of arguments for 'keys' command")
+            else:
+                key_list = redis.keys()
+                if not key_list:
+                    print("empty array")
+                else:
+                    for i, k in enumerate(key_list, start=1):
+                        print(f'{i}) "{k}"')
+
+        # --- EXPIRE key seconds ---
         elif cmd == "EXPIRE":
-            pass
+            if len(args) != 2:
+                print("(error) ERR wrong number of arguments for 'expire' command")
+            else:
+                print(redis.expire(args[0], args[1]))
+
+        # --- TTL key ---
         elif cmd == "TTL":
-            pass
+            if len(args) != 1:
+                print("(error) ERR wrong number of arguments for 'ttl' command")
+            else:
+                print(redis.ttl(args[0]))
+
+        # CONFIG SET maxmemory bytes ---
         elif cmd == "CONFIG":
-            pass
+            if len(args) == 3 and args[0].upper() == "SET" and args[1].lower() == "maxmemory":
+                print(redis.config_set(args[2]))
+            else:
+                print("(error) ERR wrong number of arguments for 'config' command")
+
+        # INFO memory ---
         elif cmd == "INFO":
-            pass
+            if len(args) == 1 and args[0].lower() == "memory":
+                print(redis.info_memory())
+            else:
+                print(f"(error) ERR wrong number of arguments for 'info' command")
+
         else:
             print(f"(error) ERR unknown command '{cmd.lower()}'")

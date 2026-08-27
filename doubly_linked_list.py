@@ -34,6 +34,7 @@ class DoublyLinkedList:
         new_node = Node(data)
         self._link(self.head, new_node, self.head.next)
         self._size += 1
+        return new_node
 
     def insert_back(self, data):
         new_node = Node(data)

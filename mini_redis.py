@@ -58,6 +58,12 @@ class MiniRedis:
                 break
 
     def set(self, key, value, ttl_seconds=None):
+        expire_at = None
+        if ttl_seconds is not None:
+            try:
+                expire_at = time.time() + float(ttl_seconds)
+            except (ValueError, TypeError):
+                return "(error) ERR value is not an integer or out of range"
 
         entry_memory = self._calculate_memory(key, value)
         if self.maxmemory > 0 and entry_memory > self.maxmemory:
@@ -66,13 +72,12 @@ class MiniRedis:
         if self.data.contains(key):
             self._delete_key(key)
 
-        new_node = Node((key, value))
+        new_node = self.lru.insert_front((key, value))
         self.data.put(key, new_node)
         self.lru.insert_front(new_node)
         self.used_memory += entry_memory
 
-        if ttl_seconds is not None:
-            expire_at = time.time() + float(ttl_seconds)
+        if expire_at is not None:
             self.ttl_heap.push((expire_at, key))
 
         self._evict_if_needed()
