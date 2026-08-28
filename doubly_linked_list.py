@@ -85,3 +85,6 @@ class DoublyLinkedList:
     def __repr__(self):
         nodes = [str(data) for data in self]
         return " -> ".join(nodes) if nodes else "Empty List"
+
+    def __len__(self):
+        return self._size

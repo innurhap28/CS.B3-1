@@ -63,7 +63,7 @@ def run_cli():
             else:
                 key_list = redis.keys()
                 if not key_list:
-                    print("empty array")
+                    print("(empty array)")
                 else:
                     for i, k in enumerate(key_list, start=1):
                         print(f'{i}) "{k}"')
