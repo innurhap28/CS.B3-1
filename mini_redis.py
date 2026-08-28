@@ -74,7 +74,6 @@ class MiniRedis:
 
         new_node = self.lru.insert_front((key, value))
         self.data.put(key, new_node)
-        self.lru.insert_front(new_node)
         self.used_memory += entry_memory
 
         if expire_at is not None:
